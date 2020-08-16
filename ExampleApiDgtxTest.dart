@@ -1,12 +1,14 @@
 import 'dart:io' show WebSocket;
 import 'dart:convert' show json;
 import 'dart:core';
+// ignore: unused_import
 import 'package:dart_random_choice/dart_random_choice.dart';
 import 'package:random_string/random_string.dart';
 
 var req_id = 0;
 // specify your own token
-var trader_token = 'SET_YOUR_TOKEN_HERE';
+//var trader_token = 'SET_YOUR_TOKEN_HERE';
+var trader_token = 'a22fa28b7122ee3fbb553483c43d2a89199acde9';
 var trading_available = false;
 Map open_contracts = {};
 Map active_cond_orders = {};
@@ -19,11 +21,11 @@ Future round_price(price) async {
 }
 
 String generate_id() {
-  String rand = randomAlphaNumeric(16);
+  var rand = randomAlphaNumeric(16);
   return rand;
 }
 
-next_req_id() {
+int next_req_id() {
   req_id++;
   return req_id;
 }
@@ -43,7 +45,7 @@ Future<Map> create_subscriptions_request(List<String> subscriptions) async {
   return data;
 }
 
-handle_index_price(WebSocket ws, rsp) async {
+Future handle_index_price(WebSocket ws, rsp) async {
   var px = rsp['data']['markPx'];
   var symbol = '';
   if (rsp['data']['indexSymbol'] == '.DGTXBTCUSD') {
@@ -54,11 +56,11 @@ handle_index_price(WebSocket ws, rsp) async {
   await handle_spot_price(ws, symbol, px);
 }
 
-handle_spot_price(WebSocket ws, String symbol, px) async {
+Future handle_spot_price(WebSocket ws, String symbol, px) async {
   //print('spot symbol : ${symbol}');
   // make actiions according to 'symbol': currently it can be either BTCUSD-PERP or ETHUSD-PERP
 
-  var value = int.parse(randomNumeric(3));
+  //var value = int.parse(randomNumeric(3));
 
   ////////////////////////////////////
   /*
@@ -167,9 +169,11 @@ Future handle_orderbook(WebSocket ws, msg) async {
     var bids = msg['data']['bids'];
     var asks = msg['data']['asks'];
     var best_bid = bids[0];
+    // ignore: unused_local_variable
     var best_bid_price = best_bid[0];
     //print('best bid px: ${best_bid_price}');
     var best_ask = asks[0];
+    // ignore: unused_local_variable
     var best_ask_price = best_ask[0];
     //print('best ask px: ${best_ask_price}');
   }
@@ -178,7 +182,9 @@ Future handle_orderbook(WebSocket ws, msg) async {
 Future handle_trades(ws, msg) async {
   List trades = msg['data']['trades'];
   trades.forEach((t) {
+    // ignore: unused_local_variable
     var trade_price = t['px'];
+    // ignore: unused_local_variable
     var trade_amount = t['qty'];
     //print('got trade: px=${trade_price}, qty=${trade_amount}');
   });
@@ -186,12 +192,19 @@ Future handle_trades(ws, msg) async {
 
 Future handle_kline(WebSocket ws, msg) async {
   var kline = msg['data'];
+  // ignore: unused_local_variable
   var i = kline['interval'];
+  // ignore: unused_local_variable
   var id = kline['id'];
+  // ignore: unused_local_variable
   var o = kline['o'];
+  // ignore: unused_local_variable
   var h = kline['h'];
+  // ignore: unused_local_variable
   var l = kline['l'];
+  // ignore: unused_local_variable
   var c = kline['c'];
+  // ignore: unused_local_variable
   var v = kline['v'];
   //print(
   //'got kline: interval=${i}, id=${id}, open_px=${o}, high_px=${h}, low_px=${l}, close_px=${c}, volume=${v}');
@@ -199,14 +212,23 @@ Future handle_kline(WebSocket ws, msg) async {
 
 Future handle_ticker(WebSocket ws, msg) async {
   var ticker = msg['data'];
+  // ignore: unused_local_variable
   var open_ts = ticker['openTime'];
+  // ignore: unused_local_variable
   var close_ts = ticker['closeTime'];
+  // ignore: unused_local_variable
   var high_px = ticker['highPx24h'];
+  // ignore: unused_local_variable
   var low_px = ticker['lowPx24h'];
+  // ignore: unused_local_variable
   var px_change = ticker['pxChange24h'];
+  // ignore: unused_local_variable
   var volume24h = ticker['volume24h'];
+  // ignore: unused_local_variable
   var funding_rate = ticker['fundingRate'];
+  // ignore: unused_local_variable
   var contract_value = ticker['contractValue'];
+  // ignore: unused_local_variable
   var dgtx_rate = ticker['dgtxUsdRate'];
   //print('got 24 stats: from=${open_ts} to=${close_ts} high_price=${high_px} '
   //'low_price=${low_px} price_change=${px_change} volume=${volume24h} '
@@ -446,7 +468,7 @@ Future cancel_order(ws, symbol, cl_ord_id) async {
 
 // usage:
 //      cancel_all_orders(ws, symbol='BTCUSD-PERP', side='SELL') - cancel all SELL orders
-Future cancel_all_orders(ws, symbol, {side = null, price = null}) async {
+Future cancel_all_orders(ws, symbol, {side, price}) async {
   var params = {'symbol': symbol};
   if (side != null) {
     params['side'] = side;
@@ -466,8 +488,7 @@ Future cancel_all_orders(ws, symbol, {side = null, price = null}) async {
 // usage:
 //      close_contract(ws, 'BTCUSD-PERP', 619920760, 'MARKET') - close contract 619920760 with market order
 //      close_contract(ws, 'BTCUSD-PERP', 619920760, 'LIMIT', 9250, 50) - close only part of the contract 619920760 with limit order
-Future close_contract(ws, symbol, contract_id, ord_type,
-    {price = null, qty = null}) async {
+Future close_contract(ws, symbol, contract_id, ord_type, {price, qty}) async {
   var params = {
     'symbol': symbol,
     'contractId': contract_id,
@@ -490,7 +511,7 @@ Future close_contract(ws, symbol, contract_id, ord_type,
 
 // usage:
 //      pass 'price' if the 'ord_type' is 'LIMIT'
-Future close_position(ws, symbol, ord_type, {price = null}) async {
+Future close_position(ws, symbol, ord_type, {price}) async {
   if (ord_type == 'LIMIT' && price == null) {
     print('price must be specified for LIMIT order');
     return null;
@@ -779,7 +800,7 @@ Future handle_leverage(WebSocket ws, msg) async {
 
 Future handle_funding(WebSocket ws, msg) async {
   var data = msg['data'];
-
+  // ignore: unused_local_variable
   var symbol = data['symbol'];
   var trader_balance = data['traderBalance'];
   var payout = data['payout'];
@@ -813,13 +834,13 @@ Future handle_error(WebSocket ws, msg) async {
   print(msg);
 }
 
-run() async {
-  var auth_req_id;
+Future run() async {
+  // ignore: unused_local_variable
   var urlReal = 'wss://ws.mapi.digitexfutures.com';
   //var urlTest = 'wss://ws.tapi.digitexfutures.com';
   var urlTest = 'wss://ws.testnet.digitex.fun';
 
-  Future<Map> req_1 = create_subscriptions_request([
+  Future req_1 = create_subscriptions_request([
     'BTCUSD-PERP@index',
     'BTCUSD-PERP@orderbook_5',
     'BTCUSD-PERP@ticker',
@@ -847,6 +868,6 @@ run() async {
   });
 }
 
-main(List<String> args) async {
+void main(List<String> args) async {
   await run();
 }
