@@ -1,17 +1,15 @@
 import 'dart:io' show WebSocket;
-import 'dart:convert' show json, utf8;
-import 'dart:math' show Random;
+import 'dart:convert' show json;
 import 'dart:core';
-import 'package:crypto/crypto.dart';
-import 'package:test/test.dart';
+import 'package:dart_random_choice/dart_random_choice.dart';
 import 'package:random_string/random_string.dart';
 
 var req_id = 0;
 // specify your own token
 var trader_token = 'SET_YOUR_TOKEN_HERE';
 var trading_available = false;
-var open_contracts = {};
-var active_cond_orders = {};
+Map open_contracts = {};
+Map active_cond_orders = {};
 Map active_orders = {};
 
 Future round_price(price) async {
@@ -36,7 +34,7 @@ Future send(ws, msg) async {
 }
 
 Future send_request(ws, Map req) async {
-  send(ws, json.encode(req));
+  await send(ws, json.encode(req));
 }
 
 Future<Map> create_subscriptions_request(List<String> subscriptions) async {
@@ -56,70 +54,110 @@ handle_index_price(WebSocket ws, rsp) async {
   await handle_spot_price(ws, symbol, px);
 }
 
-handle_spot_price(WebSocket ws, String symbol, px) {
-  var open_contracts;
-  var active_cond_orders;
+handle_spot_price(WebSocket ws, String symbol, px) async {
   //print('spot symbol : ${symbol}');
-
   // make actiions according to 'symbol': currently it can be either BTCUSD-PERP or ETHUSD-PERP
 
-  // some random condition
-  var value = Random();
-  // ---> Example of placing LIMIT order
-  //if value == 151:
-  //    side = random.choice(['BUY', 'SELL'])
-  //    limit_px = 0.0
-  //    if side == 'BUY':
-  //        limit_px = px - 50
-  //    else:
-  //        limit_px = px + 50
-  //    await place_limit_order(ws, symbol=symbol, side=side, price=round_price(limit_px), amount=10, tif='GTC')
+  var value = int.parse(randomNumeric(3));
 
+  ////////////////////////////////////
+  /*
   // some random condition
-  // ---> Example of cancelling order
-  //if value == 49:
-  //    for cl_ord_id in active_orders:
-  //        order_data = active_orders[cl_ord_id]
-  //        symbol = order_data['symbol']
-  //        print('CANCEL order {cl_ord_id}')
-  //        await cancel_order(ws, symbol, cl_ord_id)
-  //        return
+  // ---> Example of placing LIMIT order   // test ok
+  if (value == 151) {
+    print('spot value : ${value}');
+    var side = randomChoice(['BUY', 'SELL']);
+    var limit_px = 0.0;
+    if (side == 'BUY')
+      limit_px = px - 50;
+    else
+      limit_px = px + 50;
+    var price_round = await round_price(limit_px);
+    //print('$ws, $symbol, $side, $limit_px, ${price_round}');
+    await place_limit_order(ws, symbol, side, price_round, 10, 'GTC');
+  }
+  // some random condition
+  // ---> Example of cancelling order   // test ok
 
-  // ---> Example of placing conditional order
-  // some random condition
-  //if value == 2:
-  //    order_to_place = {'clOrdId': generate_id(),
-  //                      'ordType': 'LIMIT',
-  //                      'timeInForce': 'GTC',
-  //                      'side': 'SELL',
-  //                      'px': 9300,
-  //                      'qty': 45,
-  //                      'mayIncrPosition': True,
-  //    }
-  //    action_id = generate_id()
-  //    await place_conditional_order(ws, symbol, action_id, 'SPOT_PRICE', 'GREATER_EQUAL', 9300, order_to_place)
+  if (value == 49) {
+    print('spot value : ${value}');
+    if (active_orders.isNotEmpty) {
+      active_orders.forEach((key, value) async {
+        var cl_ord_id = key;
+        var symbol = value['symbol'];
+        print('key: ${key}, value: $value, symbol: $symbol');
+        cancel_order(ws, symbol, cl_ord_id);
+      });
+    }
+  }
 
-  // ---> Example of cancelling conditional order
-  // some random condition
-  //if value == 7:
-  //    if len(active_cond_orders) > 0:
-  //        // cancel a single conditional order
-  //        for action_id in active_cond_orders:
-  //            await cancel_conditional_order(ws, symbol, action_id, False)
-  //            return
-  //
-  //        // cancel all conditional orders
-  //        //await cancel_conditional_order(ws, symbol, None, True)
+  */
+  ////////////////////////////////////
+  /*
 
-  // ---> Example of closing contract
+  // ---> Example of placing conditional order   // test ok
   // some random condition
-  //if value == 196:
-  //    // close a particular contract
-  //    for contract_id in open_contracts:
-  //        await close_contract(ws, symbol, contract_id, 'MARKET')
-  //
-  //    // close all open contracts
-  //    await close_position(ws, symbol, 'MARKET')
+  if (value == 2) {
+    print('spot value : ${value}');
+    var order_to_place = {
+      'clOrdId': generate_id(),
+      'ordType': 'LIMIT',
+      'timeInForce': 'GTC',
+      'side': 'SELL',
+      'px': 13000,
+      'qty': 45,
+      'mayIncrPosition': true
+    };
+    var action_id = generate_id();
+    await place_conditional_order(ws, symbol, action_id, 'SPOT_PRICE',
+        'GREATER_EQUAL', 13000, order_to_place);
+  }
+
+  // ---> Example of cancelling conditional order   // test ok
+  // some random condition
+  if (value == 7) {
+    print('spot value : ${value}');
+    if (active_cond_orders.length > 0) {
+      //cancel a single conditional order
+      //List list = [];
+      //active_cond_orders.forEach((k, v) => list.add([k, v]));
+      //for (var item in list) {
+      //  var action_id = item[0];
+      //  await cancel_conditional_order(ws, symbol, action_id, false);
+      //  print('action_id: ${action_id}');
+      //  return null;
+      //}
+
+      //cancel all conditional orders
+      await cancel_conditional_order(ws, symbol, null, true);
+    }
+  }
+
+  */
+  ////////////////////////////////////
+  /*
+
+  // ---> Example of closing contract   // test ok
+  // some random condition
+  if (value == 196) {
+    print('spot value : ${value}');
+    if (open_contracts.length > 0) {
+      // close a particular contract
+      //List list = [];
+      //open_contracts.forEach((k, v) => list.add([k, v]));
+      //for (var item in list) {
+      //  var contract_id = item[0];
+      //  await close_contract(ws, symbol, contract_id, 'MARKET');
+      //  print('contract_id: ${contract_id}');
+      //  return null;
+      //}
+
+      //close all open contracts
+      await close_position(ws, symbol, 'MARKET');
+    }
+  }
+  
+  */
 }
 
 Future handle_orderbook(WebSocket ws, msg) async {
@@ -302,8 +340,6 @@ Future get_trader_status(WebSocket ws) async {
 }
 
 Future handle_trader_status(WebSocket ws, msg) async {
-  var open_contracts;
-  var active_cond_orders;
   var data = msg['data'];
 
   var trader_balance = data['traderBalance'];
@@ -354,7 +390,6 @@ Future handle_trader_status(WebSocket ws, msg) async {
     print('active_orders handle_trader_status: $active_orders');
   }
 
-  active_cond_orders = {};
   if (data.containsKey('conditionalOrders')) {
     List cond_orderlist = data['conditionalOrders'];
     cond_orderlist.forEach((co) {
@@ -484,7 +519,7 @@ Future place_conditional_order(ws, symbol, action_id, trigger_price,
     'actionId': action_id,
     'pxType': trigger_price,
     'condition': trigger_cond,
-    'pxValue': round_price(trigger_val)
+    'pxValue': trigger_val.round()
   };
   order_data.forEach((key, value) {
     params[key] = value;
@@ -496,8 +531,7 @@ Future place_conditional_order(ws, symbol, action_id, trigger_price,
 
 // usage:
 //      cancel_conditional_order(ws, 'BTCUSD-PERP', 'a5b90ca768754b75', all=False)
-Future cancel_conditional_order(ws, symbol,
-    {action_id = null, all = false}) async {
+Future cancel_conditional_order(ws, symbol, action_id, all) async {
   if (action_id == null && all == false) {
     print(
         'attempt to cancel conditional order: either $action_id should be specified or $all set to True');
@@ -572,7 +606,6 @@ Future handle_order_status(WebSocket ws, msg) async {
 }
 
 Future handle_order_filled(WebSocket ws, msg) async {
-  var open_contracts;
   var data = msg['data'];
   var filled_ord_id = data['clOrdId'];
   var order_status = data['orderStatus'];
@@ -607,7 +640,7 @@ Future handle_order_filled(WebSocket ws, msg) async {
       var exit_px = c['exitPx'];
       print('contract ${closed_contract_id} has been closed at ${exit_px}');
       if (open_contracts.containsKey('closed_contract_id')) {
-        open_contracts.pop(closed_contract_id);
+        open_contracts.remove(closed_contract_id);
       }
     }
 
@@ -658,8 +691,6 @@ Future handle_contract_closed(WebSocket ws, msg) async {
 }
 
 Future handle_conditional_order_status(WebSocket ws, msg) async {
-  var active_cond_orders;
-
   var data = msg['data'];
   var status = data['status'];
 
@@ -681,7 +712,7 @@ Future handle_conditional_order_status(WebSocket ws, msg) async {
       var action_id = co['oldActionId'];
 
       if (active_cond_orders.containsKey('$action_id')) {
-        active_cond_orders.pop(action_id);
+        active_cond_orders.remove(action_id);
       }
 
       print('conditional order ${action_id}: ${status}');
@@ -693,7 +724,6 @@ Future handle_conditional_order_status(WebSocket ws, msg) async {
 }
 
 Future handle_leverage(WebSocket ws, msg) async {
-  var open_contracts;
   var data = msg['data'];
   var leverage = data['leverage'];
   print('trader leverage now is: ${leverage}');
@@ -783,8 +813,7 @@ Future handle_error(WebSocket ws, msg) async {
   print(msg);
 }
 
-run(var tk) async {
-  var trader_token = tk;
+run() async {
   var auth_req_id;
   var urlReal = 'wss://ws.mapi.digitexfutures.com';
   //var urlTest = 'wss://ws.tapi.digitexfutures.com';
@@ -819,6 +848,5 @@ run(var tk) async {
 }
 
 main(List<String> args) async {
-  await run('2c459631e088a9a944c1533bc73afd4e712d9d59');
-  //await run('SET_YOUR_TOKEN_HERE');
+  await run();
 }
